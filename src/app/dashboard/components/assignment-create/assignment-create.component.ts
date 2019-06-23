@@ -131,8 +131,8 @@ export class AssignmentCreateComponent implements OnInit, OnDestroy {
       id: this.assignmentId,
       cameraId: assignment.cameraId,
       vehicleId: assignment.vehicleId,
-      dateCreated: assignment.dateCreated,
-      deleted: assignment.deleted
+      dateCreated: this.assignment.dateCreated,
+      deleted: this.assignment.deleted
     };
 
     this.cameraAssignmentService

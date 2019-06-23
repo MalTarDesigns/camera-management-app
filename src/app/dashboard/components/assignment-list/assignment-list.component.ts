@@ -17,7 +17,7 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
 
   displayedColumns = [
     'id',
-    'cameraDevice',
+    'cameraDeviceNo',
     'vehicleName',
     'dateCreated',
     'actions'
@@ -26,7 +26,7 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
   private cameras: any;
   private vehicles: any;
 
-  private cameraDeviceFilter = new FormControl();
+  private cameraDeviceNoFilter = new FormControl();
   private vehicleNameFilter = new FormControl();
   private filterValues = { cameraDeviceNo: '', vehicleName: '' };
   private unsubscribe$ = new Subject();
@@ -36,7 +36,7 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.dataSource.paginator = this.paginator;
 
-    this.cameraDeviceFilter.valueChanges
+    this.cameraDeviceNoFilter.valueChanges
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe(value => {
         this.filterValues.cameraDeviceNo = value;
@@ -75,56 +75,6 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
     this.getAllAssignments();
   }
 
-  createFilter() {
-    const filterFunction = (data, filter): boolean => {
-      const searchTerms = JSON.parse(filter);
-      return (
-        data.cameraDevice.toString().indexOf(searchTerms.cameraDeviceNo) !==
-          -1 && data.vehicleName.indexOf(searchTerms.vehicleName) !== -1
-      );
-    };
-    return filterFunction;
-  }
-
-  getAllAssignments() {
-    this.cameraAssignmentService
-      .getAssignments()
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe(
-        (data: any[]) => {
-          const activeAssignments = data
-            .filter(assignment => assignment.deleted === false)
-            .map(a => {
-              this.vehicles.map(vehicle => {
-                if (a.vehicleId === vehicle.id) {
-                  a.vehicleName = vehicle.name;
-                }
-              });
-              this.cameras.map(camera => {
-                if (a.cameraId === camera.id) {
-                  a.cameraDevice = camera.deviceNo;
-                }
-              });
-              return a;
-            });
-          this.dataSource.data = activeAssignments;
-        },
-        (err: HttpErrorResponse) => console.error(err)
-      );
-  }
-
-  createAssignment(assignment: ICameraAssignment) {
-    this.cameraAssignmentService
-      .createAssignment(assignment)
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe(
-        res => {
-          console.log('Assignment created');
-        },
-        (err: HttpErrorResponse) => console.error(err)
-      );
-  }
-
   // Set delete flag to selected assignment
   deleteAssignment(assignment: ICameraAssignment) {
     assignment.deleted = true;
@@ -154,6 +104,44 @@ export class AssignmentListComponent implements OnInit, OnDestroy {
     } else {
       return;
     }
+  }
+
+  private createFilter() {
+    const filterFunction = (data, filter): boolean => {
+      const searchTerms = JSON.parse(filter);
+      return (
+        data.cameraDeviceNo.toString().indexOf(searchTerms.cameraDeviceNo) !==
+          -1 && data.vehicleName.indexOf(searchTerms.vehicleName) !== -1
+      );
+    };
+    return filterFunction;
+  }
+
+  private getAllAssignments() {
+    this.cameraAssignmentService
+      .getAssignments()
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(
+        (data: any[]) => {
+          const activeAssignments = data
+            .filter(assignment => assignment.deleted === false)
+            .map(a => {
+              this.vehicles.map(vehicle => {
+                if (a.vehicleId === vehicle.id) {
+                  a.vehicleName = vehicle.name;
+                }
+              });
+              this.cameras.map(camera => {
+                if (a.cameraId === camera.id) {
+                  a.cameraDeviceNo = camera.deviceNo;
+                }
+              });
+              return a;
+            });
+          this.dataSource.data = activeAssignments;
+        },
+        (err: HttpErrorResponse) => console.error(err)
+      );
   }
 
   //// Delete row from data table.
