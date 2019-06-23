@@ -3,6 +3,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { CameraAssignmentService } from '../../services/camera-assignment.service';
 import { MatPaginator } from '@angular/material';
 import { HttpErrorResponse } from '@angular/common/http';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-assignment-list',
@@ -23,10 +24,27 @@ export class AssignmentListComponent implements OnInit {
   private cameras: any;
   private vehicles: any;
 
+  private cameraDeviceFilter = new FormControl();
+  private vehicleNameFilter = new FormControl();
+  private filterValues = { cameraDeviceNo: '', vehicleName: '' };
+
   constructor(private cameraAssignmentService: CameraAssignmentService) {}
 
   ngOnInit() {
     this.dataSource.paginator = this.paginator;
+
+    this.cameraDeviceFilter.valueChanges.subscribe(value => {
+      this.filterValues.cameraDeviceNo = value;
+      this.dataSource.filter = JSON.stringify(this.filterValues);
+    });
+    this.vehicleNameFilter.valueChanges.subscribe(value => {
+      this.filterValues.vehicleName = value;
+      this.dataSource.filter = JSON.stringify(this.filterValues);
+    });
+
+    // custom filterPredicate function
+    this.dataSource.filterPredicate = this.createFilter();
+
     this.cameraAssignmentService.getCameras().subscribe(
       cameras => {
         this.cameras = cameras;
@@ -40,11 +58,19 @@ export class AssignmentListComponent implements OnInit {
       },
       (err: HttpErrorResponse) => console.error(err)
     );
+
     this.getAllAssignments();
   }
 
-  applyFilter(filterValue: string) {
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+  createFilter() {
+    const filterFunction = (data, filter): boolean => {
+      const searchTerms = JSON.parse(filter);
+      return (
+        data.cameraDevice.toString().indexOf(searchTerms.cameraDeviceNo) !==
+          -1 && data.vehicleName.indexOf(searchTerms.vehicleName) !== -1
+      );
+    };
+    return filterFunction;
   }
 
   getAllAssignments() {
