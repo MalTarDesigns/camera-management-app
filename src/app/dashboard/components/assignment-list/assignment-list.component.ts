@@ -65,7 +65,6 @@ export class AssignmentListComponent implements OnInit {
             });
             return a;
           });
-        console.log(activeAssignments);
         this.dataSource.data = activeAssignments;
       },
       (err: HttpErrorResponse) => console.error(err)
@@ -89,7 +88,7 @@ export class AssignmentListComponent implements OnInit {
       this.cameraAssignmentService.updateAssignment(assignment).subscribe(
         res => {
           this.getAllAssignments();
-          console.log('Assignment updated: ', res);
+          console.log('Assignment updated');
         },
         (err: HttpErrorResponse) => console.error(err)
       );

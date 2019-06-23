@@ -1,10 +1,11 @@
 <mat-card>
-  <form class="container" [formGroup]="createAssignmentFormGroup" (ngSubmit)="onSubmit()">
-    <h3>Create Camera Assignment</h3>
+  <form [formGroup]="createAssignmentFormGroup" (ngSubmit)="onSubmit()">
+    <h3 *ngIf="mode === 'create'">Add Camera Assignment</h3>
+    <h3 *ngIf="mode === 'edit'">Update Camera Assignment</h3>
 
     <mat-form-field>
       <mat-label>Camera</mat-label>
-      <mat-select formControlName="cameraId">
+      <mat-select formControlName="cameraId" required>
         <mat-option *ngFor="let camera of cameras | async" [value]="camera.id">
           {{camera.deviceNo}}
         </mat-option>
@@ -13,7 +14,7 @@
 
     <mat-form-field>
       <mat-label>Vehicle</mat-label>
-      <mat-select formControlName="vehicleId">
+      <mat-select formControlName="vehicleId" required>
         <mat-option *ngFor="let vehicle of vehicles | async" [value]="vehicle.id">
           {{vehicle.name}}
         </mat-option>
@@ -24,8 +25,4 @@
       Save Post
     </button>
   </form>
-
-  <!-- <div class="example-container">
-   
-  </div> -->
 </mat-card>

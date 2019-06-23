@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CameraAssignmentService } from '../../services/camera-assignment.service';
-import { FormGroup, FormBuilder } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -29,8 +29,8 @@ export class AssignmentCreateComponent implements OnInit {
 
   ngOnInit() {
     this.createAssignmentFormGroup = this.fb.group({
-      cameraId: [' '],
-      vehicleId: [' ']
+      cameraId: ['', Validators.required],
+      vehicleId: ['', Validators.required]
     });
 
     this.route.paramMap.subscribe((paramMap: ParamMap) => {

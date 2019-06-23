@@ -1,10 +1,15 @@
-.container {
+.mat-card {
+  margin-top: 1.25rem;
+}
+
+form {
   display: flex;
   flex-direction: column;
 }
 
-.container > * {
-  width: 100%;
+form h3 {
+  text-align: center;
+  margin-top: 0;
 }
 
 mat-card {

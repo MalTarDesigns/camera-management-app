@@ -45,8 +45,6 @@ export class CameraAssignmentService {
   }
 
   updateAssignment(assignment: ICameraAssignment) {
-    console.log('This is the assignment being updated:', assignment);
-
     return this.http.put(
       `${this.SERVER_URL + 'cameraAssignments'}/${assignment.id}`,
       assignment,
