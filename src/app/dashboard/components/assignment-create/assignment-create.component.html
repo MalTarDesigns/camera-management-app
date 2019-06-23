@@ -6,7 +6,7 @@
     <mat-form-field>
       <mat-label>Camera</mat-label>
       <mat-select formControlName="cameraId" required>
-        <mat-option *ngFor="let camera of cameras | async" [value]="camera.id">
+        <mat-option *ngFor="let camera of cameras$ | async" [value]="camera.id">
           {{camera.deviceNo}}
         </mat-option>
       </mat-select>
@@ -15,7 +15,7 @@
     <mat-form-field>
       <mat-label>Vehicle</mat-label>
       <mat-select formControlName="vehicleId" required>
-        <mat-option *ngFor="let vehicle of vehicles | async" [value]="vehicle.id">
+        <mat-option *ngFor="let vehicle of vehicles$ | async" [value]="vehicle.id">
           {{vehicle.name}}
         </mat-option>
       </mat-select>

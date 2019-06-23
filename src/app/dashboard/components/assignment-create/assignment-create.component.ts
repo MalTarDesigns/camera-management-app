@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CameraAssignmentService } from '../../services/camera-assignment.service';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
@@ -10,15 +11,16 @@ import { HttpErrorResponse } from '@angular/common/http';
   templateUrl: './assignment-create.component.html',
   styleUrls: ['./assignment-create.component.scss']
 })
-export class AssignmentCreateComponent implements OnInit {
+export class AssignmentCreateComponent implements OnInit, OnDestroy {
   createAssignmentFormGroup: FormGroup;
   assignment: ICameraAssignment;
-  cameras: Observable<any>;
-  vehicles: Observable<any>;
+  cameras$: Observable<any>;
+  vehicles$: Observable<any>;
   private cameraIds: any;
   private vehicleIds: any;
   private assignmentId: number;
   private mode = 'create';
+  private unsubscribe$ = new Subject();
 
   constructor(
     private fb: FormBuilder,
@@ -33,51 +35,59 @@ export class AssignmentCreateComponent implements OnInit {
       vehicleId: ['', Validators.required]
     });
 
-    this.route.paramMap.subscribe((paramMap: ParamMap) => {
-      if (paramMap.has('assignmentId')) {
-        this.mode = 'edit';
-        this.assignmentId = parseInt(paramMap.get('assignmentId'), null);
-        // Get Assignment by id
-        this.cameraAssignmentService.getAssignment(this.assignmentId).subscribe(
-          (assignment: any) => {
-            this.assignment = {
-              id: assignment.id,
-              cameraId: assignment.cameraId,
-              vehicleId: assignment.vehicleId,
-              dateCreated: assignment.dateCreated,
-              deleted: assignment.deleted
-            };
-            this.createAssignmentFormGroup.setValue({
-              cameraId: this.assignment.cameraId,
-              vehicleId: this.assignment.vehicleId
-            });
-          },
-          (err: HttpErrorResponse) => console.error(err)
-        ); // unsubscription is handled by angular httpClient
-      } else {
-        this.mode = 'create';
-        this.assignmentId = null;
-      }
-    });
+    this.route.paramMap
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((paramMap: ParamMap) => {
+        if (paramMap.has('assignmentId')) {
+          this.mode = 'edit';
+          this.assignmentId = parseInt(paramMap.get('assignmentId'), null);
+          // Get Assignment by id
+          this.cameraAssignmentService
+            .getAssignment(this.assignmentId)
+            .pipe(takeUntil(this.unsubscribe$))
+            .subscribe(
+              (assignment: any) => {
+                this.assignment = {
+                  id: assignment.id,
+                  cameraId: assignment.cameraId,
+                  vehicleId: assignment.vehicleId,
+                  dateCreated: assignment.dateCreated,
+                  deleted: assignment.deleted
+                };
+                this.createAssignmentFormGroup.setValue({
+                  cameraId: this.assignment.cameraId,
+                  vehicleId: this.assignment.vehicleId
+                });
+              },
+              (err: HttpErrorResponse) => console.error(err)
+            );
+        } else {
+          this.mode = 'create';
+          this.assignmentId = null;
+        }
+      });
 
     // Get all active assignment
-    this.cameraAssignmentService.getAssignments().subscribe(
-      (assignments: any) => {
-        const activeAssignments = assignments.filter(
-          assignment => assignment.deleted === false
-        );
-        this.cameraIds = activeAssignments.map(
-          assignment => assignment.cameraId
-        );
-        this.vehicleIds = activeAssignments.map(
-          assignment => assignment.vehicleId
-        );
-      },
-      (err: HttpErrorResponse) => console.error(err)
-    );
+    this.cameraAssignmentService
+      .getAssignments()
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(
+        (assignments: any) => {
+          const activeAssignments = assignments.filter(
+            assignment => assignment.deleted === false
+          );
+          this.cameraIds = activeAssignments.map(
+            assignment => assignment.cameraId
+          );
+          this.vehicleIds = activeAssignments.map(
+            assignment => assignment.vehicleId
+          );
+        },
+        (err: HttpErrorResponse) => console.error(err)
+      );
 
-    this.cameras = this.cameraAssignmentService.getCameras();
-    this.vehicles = this.cameraAssignmentService.getVehicles();
+    this.cameras$ = this.cameraAssignmentService.getCameras();
+    this.vehicles$ = this.cameraAssignmentService.getVehicles();
   }
 
   onSubmit() {
@@ -104,13 +114,16 @@ export class AssignmentCreateComponent implements OnInit {
   }
 
   private createAssignment(cameraAssignment: ICameraAssignment) {
-    this.cameraAssignmentService.createAssignment(cameraAssignment).subscribe(
-      res => {
-        this.router.navigate(['/']);
-        console.log('Assignment created');
-      },
-      (err: HttpErrorResponse) => console.error(err)
-    );
+    this.cameraAssignmentService
+      .createAssignment(cameraAssignment)
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(
+        res => {
+          this.router.navigate(['/']);
+          console.log('Assignment created');
+        },
+        (err: HttpErrorResponse) => console.error(err)
+      );
   }
 
   private updateAssignment(assignment: ICameraAssignment) {
@@ -122,13 +135,16 @@ export class AssignmentCreateComponent implements OnInit {
       deleted: assignment.deleted
     };
 
-    this.cameraAssignmentService.updateAssignment(newAssignment).subscribe(
-      res => {
-        this.router.navigate(['/']);
-        console.log('Assignment updated');
-      },
-      (err: HttpErrorResponse) => console.error(err)
-    );
+    this.cameraAssignmentService
+      .updateAssignment(newAssignment)
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(
+        res => {
+          this.router.navigate(['/']);
+          console.log('Assignment updated');
+        },
+        (err: HttpErrorResponse) => console.error(err)
+      );
   }
 
   private existingAssignmentCheck(
@@ -166,5 +182,10 @@ export class AssignmentCreateComponent implements OnInit {
     }
 
     return false;
+  }
+
+  ngOnDestroy() {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 }
